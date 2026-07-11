@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  # MongoDB数据库
+  mongodb:
+    image: mongo:7
+    container_name: thought_incubator_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+    networks:
+      - thought_net
+
+  # 后端API
+  backend:
+    build: ./backend
+    container_name: thought_incubator_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URL=mongodb://mongodb:27017
+      - MONGODB_DB=thought_incubator
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_API_BASE=${OPENAI_API_BASE:-https://api.openai.com/v1}
+      - LLM_MODEL=${LLM_MODEL:-gpt-4o}
+      - MAX_ROUNDS=${MAX_ROUNDS:-20}
+      - SCORE_THRESHOLD=${SCORE_THRESHOLD:-6}
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+    networks:
+      - thought_net
+
+volumes:
+  mongodb_data:
+
+networks:
+  thought_net:
+    driver: bridge
