@@ -1,21 +1,21 @@
-version: '3.8'
-
 services:
-  # MongoDB数据库
+  # MongoDB数据库（用27018避免与本机已运行的mongo冲突）
   mongodb:
     image: mongo:7
     container_name: thought_incubator_mongo
     ports:
-      - "27017:27017"
+      - "27018:27017"
     volumes:
       - mongodb_data:/data/db
     restart: unless-stopped
     networks:
       - thought_net
 
-  # 后端API
+  # 后端API + 前端静态文件
   backend:
-    build: ./backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: thought_incubator_backend
     ports:
       - "8000:8000"
