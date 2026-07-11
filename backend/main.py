@@ -5,16 +5,18 @@ from pathlib import Path
 from datetime import datetime
 
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import Response, JSONResponse
 from motor.motor_asyncio import AsyncIOMotorClient
 from sse_starlette.sse import EventSourceResponse
 
 from config import config
-from models import CreateDebateRequest, UpdateConfigRequest
+from models import CreateDebateRequest, UpdateConfigRequest, InjectMessageRequest
 from debate_service import debate_service
 from llm_service import llm_service
+from web_search import web_search
 from agents import AGENTS, AGENT_ORDER, AGENT_NAMES, AGENT_COLORS, AGENT_ICONS
 
 logging.basicConfig(
@@ -43,6 +45,13 @@ async def startup_db():
     debate_service.init_db(db)
     logger.info(f"MongoDB已连接: {config.MONGODB_URL}/{config.MONGODB_DB}")
     logger.info(f"LLM配置: model={llm_service.get_model()}, configured={llm_service.is_configured()}")
+
+
+@app.on_event("shutdown")
+async def shutdown_cleanup():
+    """关闭时清理资源"""
+    await web_search.close()
+    logger.info("资源清理完成")
 
 
 # ==================== API路由 ====================
@@ -100,6 +109,65 @@ async def stop_debate(debate_id: str):
     if not success:
         raise HTTPException(status_code=404, detail="辩论不存在")
     return {"status": "terminated"}
+
+
+@app.post("/api/debates/{debate_id}/pause")
+async def pause_debate(debate_id: str):
+    """暂停辩论（可恢复）"""
+    success = await debate_service.pause_debate(debate_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="辩论不存在或不在进行中")
+    return {"status": "paused"}
+
+
+@app.post("/api/debates/{debate_id}/resume")
+async def resume_debate(debate_id: str):
+    """恢复暂停的辩论"""
+    success = await debate_service.resume_debate(debate_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="辩论不存在或未暂停")
+    return {"status": "ongoing"}
+
+
+@app.post("/api/debates/{debate_id}/inject")
+async def inject_message(debate_id: str, request: InjectMessageRequest):
+    """注入用户消息到辩论"""
+    result = await debate_service.inject_message(debate_id, request.content)
+    if not result:
+        raise HTTPException(status_code=404, detail="辩论不存在或不在进行中")
+    return result
+
+
+@app.get("/api/debates/{debate_id}/export")
+async def export_debate(debate_id: str, format: str = Query(default="md", description="导出格式: json|md|summary|report")):
+    """多格式导出辩论
+
+    format:
+      - json: 完整辩论数据(JSON)
+      - md: 完整辩论记录(Markdown)
+      - summary: 精简纪要(Markdown, 调用LLM生成)
+      - report: 思想孵化报告(Markdown, 复用final_summary)
+    """
+    valid_formats = {"json", "md", "summary", "report"}
+    if format not in valid_formats:
+        raise HTTPException(status_code=400, detail=f"不支持的格式: {format}")
+
+    result = await debate_service.export_debate(debate_id, format)
+    if not result:
+        raise HTTPException(status_code=404, detail="辩论不存在")
+
+    if format == "json":
+        return JSONResponse(
+            content=result,
+            headers={"Content-Disposition": f'attachment; filename="debate_{debate_id}.json"'}
+        )
+
+    # Markdown格式返回纯文本
+    return Response(
+        content=result,
+        media_type="text/markdown; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="debate_{debate_id}_{format}.md"'}
+    )
 
 
 @app.get("/api/config")

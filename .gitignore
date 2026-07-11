@@ -17,6 +17,10 @@ env/
 # IDE
 .vscode/
 .idea/
+.mimocode/
+.trae/
+.juno_task/
+.uploads/
 *.swp
 *.swo
 *~

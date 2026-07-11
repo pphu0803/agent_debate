@@ -37,6 +37,7 @@
                 <button class="btn-primary btn-start" id="btnStart">
                     <span>开始辩论</span>
                 </button>
+                <button class="btn-pause hidden" id="btnPause">暂停</button>
                 <button class="btn-stop hidden" id="btnStop">终止</button>
             </div>
 
@@ -89,17 +90,17 @@
                         <div class="empty-agent" style="--c: #ff6b6b">
                             <div class="empty-avatar">💡</div>
                             <div class="empty-name">创新者</div>
-                            <div class="empty-desc">提出新概念和新理论</div>
+                            <div class="empty-desc">提出新视角和新机制</div>
                         </div>
                         <div class="empty-agent" style="--c: #4ecdc4">
                             <div class="empty-avatar">⚔️</div>
-                            <div class="empty-name">反对者</div>
-                            <div class="empty-desc">批判逻辑漏洞和矛盾</div>
+                            <div class="empty-name">批判者</div>
+                            <div class="empty-desc">逻辑审查找出漏洞</div>
                         </div>
                         <div class="empty-agent" style="--c: #95e1d3">
-                            <div class="empty-avatar">📚</div>
-                            <div class="empty-name">学者</div>
-                            <div class="empty-desc">参照现有知识和文献</div>
+                            <div class="empty-avatar">🔍</div>
+                            <div class="empty-name">严谨者</div>
+                            <div class="empty-desc">用事实和证据支撑</div>
                         </div>
                     </div>
                 </div>
@@ -110,6 +111,11 @@
                 <div class="bottombar-content" id="bottombarContent">
                     <span class="pulse-dot"></span>
                     <span>等待开始...</span>
+                </div>
+                <!-- 暂停时显示用户输入区 -->
+                <div class="bottombar-input hidden" id="bottombarInput">
+                    <textarea id="userInput" placeholder="输入你的观点，按Ctrl+Enter发送..." rows="2"></textarea>
+                    <button class="btn-send" id="btnSend">发送</button>
                 </div>
             </div>
         </main>
@@ -153,6 +159,11 @@
                 <button class="modal-close" id="closeHistory">&times;</button>
             </div>
             <div class="modal-body">
+                <div class="history-tabs">
+                    <button class="history-tab active" data-filter="all">全部</button>
+                    <button class="history-tab" data-filter="resumable">可恢复</button>
+                    <button class="history-tab" data-filter="completed">已完成</button>
+                </div>
                 <div class="history-list" id="historyList"></div>
             </div>
         </div>
@@ -169,7 +180,16 @@
                 <div class="report-content" id="reportContent"></div>
             </div>
             <div class="modal-footer">
-                <button class="btn-primary" id="exportReport">导出Markdown</button>
+                <div class="export-dropdown">
+                    <button class="btn-primary" id="exportMenuBtn">导出 <span class="caret">▼</span></button>
+                    <div class="export-menu hidden" id="exportMenu">
+                        <button class="export-option" data-format="report">📝 思想孵化报告 (MD)</button>
+                        <button class="export-option" data-format="md">📋 完整辩论记录 (MD)</button>
+                        <button class="export-option" data-format="summary">📌 精简纪要 (MD)</button>
+                        <button class="export-option" data-format="json">💾 原始数据 (JSON)</button>
+                        <button class="export-option" data-format="pdf">🖨️ 打印为PDF</button>
+                    </div>
+                </div>
                 <button class="btn-cancel" id="closeReportBtn">关闭</button>
             </div>
         </div>

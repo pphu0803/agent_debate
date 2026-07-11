@@ -9,6 +9,7 @@ class AgentRole(str, Enum):
     INNOVATOR = "innovator"
     CRITIC = "critic"
     SCHOLAR = "scholar"
+    MODERATOR = "moderator"
 
 
 class CreateDebateRequest(BaseModel):
@@ -23,6 +24,11 @@ class UpdateConfigRequest(BaseModel):
     api_key: Optional[str] = Field(default=None, description="LLM API密钥")
     api_base: Optional[str] = Field(default=None, description="API基础地址")
     model: Optional[str] = Field(default=None, description="模型名称")
+
+
+class InjectMessageRequest(BaseModel):
+    """用户注入消息请求"""
+    content: str = Field(..., min_length=1, max_length=10000, description="用户发言内容")
 
 
 class AgentInfo(BaseModel):
