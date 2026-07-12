@@ -177,6 +177,8 @@ async def get_config():
         "configured": llm_service.is_configured(),
         "model": llm_service.get_model(),
         "api_base": llm_service.get_api_base(),
+        # 标识key是否为占位符（有值但无效），前端据此给出更精确的提示
+        "has_placeholder_key": bool(llm_service._api_key) and not llm_service.is_configured(),
     }
 
 

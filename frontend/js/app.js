@@ -51,6 +51,14 @@ const els = {
     historyList: $('historyList'),
     reportContent: $('reportContent'),
     toastContainer: $('toastContainer'),
+    btnExport: $('btnExport'),
+    exportMenuSidebar: $('exportMenuSidebar'),
+    debateActions: $('debateActions'),
+    btnViewReport: $('btnViewReport'),
+    btnContinue: $('btnContinue'),
+    debateContinue: $('debateContinue'),
+    continueInput: $('continueInput'),
+    btnContinueSend: $('btnContinueSend'),
 };
 
 const AGENTS = {
@@ -84,6 +92,9 @@ function updateConfigStatus(data) {
     if (data.configured) {
         els.configStatus.className = 'config-status ok';
         els.configStatus.textContent = `已配置 - 模型: ${data.model}`;
+    } else if (data.has_placeholder_key) {
+        els.configStatus.className = 'config-status error';
+        els.configStatus.textContent = '⚠️ 当前API Key是占位符，请填写真实密钥';
     } else {
         els.configStatus.className = 'config-status error';
         els.configStatus.textContent = '未配置API Key，请填写后再开始';
@@ -121,20 +132,29 @@ function bindEvents() {
     $('closeReport').addEventListener('click', closeReport);
     $('closeReportBtn').addEventListener('click', closeReport);
 
-    // 导出菜单
-    $('exportMenuBtn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        $('exportMenu').classList.toggle('hidden');
+    // 导出菜单：通用化绑定，支持多个导出下拉（报告弹窗 + 侧边栏常驻）
+    document.querySelectorAll('.export-dropdown').forEach(dd => {
+        const trigger = dd.querySelector('button:not(.export-option)');
+        if (trigger) {
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // 关闭其他下拉
+                document.querySelectorAll('.export-menu').forEach(m => {
+                    if (m !== dd.querySelector('.export-menu')) m.classList.add('hidden');
+                });
+                dd.querySelector('.export-menu')?.classList.toggle('hidden');
+            });
+        }
     });
     document.querySelectorAll('.export-option').forEach(btn => {
         btn.addEventListener('click', () => {
             exportDebate(btn.dataset.format);
-            $('exportMenu').classList.add('hidden');
+            document.querySelectorAll('.export-menu').forEach(m => m.classList.add('hidden'));
         });
     });
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.export-dropdown')) {
-            $('exportMenu')?.classList.add('hidden');
+            document.querySelectorAll('.export-menu').forEach(m => m.classList.add('hidden'));
         }
     });
 
@@ -144,6 +164,21 @@ function bindEvents() {
 
     els.topicInput.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') startDebate();
+    });
+
+    // 辩论结束后操作：查看报告 / 继续讨论
+    els.btnViewReport.addEventListener('click', () => {
+        if (state.currentReport) showReport(state.currentReport);
+    });
+    els.btnContinue.addEventListener('click', () => {
+        els.debateContinue.classList.toggle('hidden');
+        if (!els.debateContinue.classList.contains('hidden')) {
+            els.continueInput?.focus();
+        }
+    });
+    els.btnContinueSend.addEventListener('click', startContinuedDebate);
+    els.continueInput.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') startContinuedDebate();
     });
 }
 
@@ -156,7 +191,12 @@ async function startDebate() {
         const res = await fetch(`${API_BASE}/api/config`);
         const data = await res.json();
         if (!data.configured) {
-            showToast('请先在设置中配置API Key', 'error');
+            // 区分"完全没配置"和"检测到占位符密钥"
+            if (data.has_placeholder_key) {
+                showToast('检测到 API Key 是占位符，请先配置真实密钥', 'error');
+            } else {
+                showToast('请先在设置中配置API Key', 'error');
+            }
             openSettings();
             return;
         }
@@ -197,7 +237,27 @@ async function startDebate() {
     }
 }
 
-// ===== 连接SSE =====
+// ===== 续作新辩论（基于上一轮结论）=====
+async function startContinuedDebate() {
+    const userInput = els.continueInput.value.trim();
+    if (!userInput) { showToast('请输入你想补充或延续的内容', 'error'); return; }
+
+    // 把上一轮报告的核心结论摘要 + 用户新输入拼成新议题
+    // 报告可能很长，截取前300字作为上下文锚点
+    const prevSummary = state.currentReport
+        ? state.currentReport.slice(0, 300).replace(/[#*`\n]/g, ' ').trim()
+        : '';
+    const newTopic = prevSummary
+        ? `【延续讨论】基于上一轮辩论结论：${prevSummary}……\n\n用户补充：${userInput}`
+        : userInput;
+
+    // 填入议题框并启动新辩论
+    els.topicInput.value = newTopic;
+    els.debateActions?.classList.add('hidden');
+    els.debateContinue?.classList.add('hidden');
+    if (els.continueInput) els.continueInput.value = '';
+    startDebate();
+}
 function connectSSE(debateId) {
     if (state.eventSource) state.eventSource.close();
     state.eventSource = new EventSource(`${API_BASE}/api/debates/${debateId}/stream`);
@@ -649,6 +709,9 @@ function handleComplete(data) {
     }
     updateTopbar({ status: 'completed' });
     state.currentReport = data.report;
+    // 显示结束操作区（查看报告 / 继续讨论）
+    els.debateActions?.classList.remove('hidden');
+    els.debateContinue?.classList.add('hidden');
     if (data.consensus) {
         showToast(`辩论完成 - ${data.total_rounds}轮达成共识`, 'success');
         addSystemNotice(`辩论完成 - ${data.total_rounds}轮后三方达成共识`, 'info');
@@ -754,6 +817,13 @@ function setDebatingState(debating) {
     els.topicInput.disabled = debating;
     els.maxRounds.disabled = debating;
     els.scoreThreshold.disabled = debating;
+    // 导出按钮：只要有debateId就可用（辩论进行中也可导出）
+    if (els.btnExport) els.btnExport.disabled = !state.debateId;
+    // 开始新辩论时隐藏结束操作区
+    if (debating) {
+        els.debateActions?.classList.add('hidden');
+        els.debateContinue?.classList.add('hidden');
+    }
 }
 
 function setPausedState(paused) {
@@ -1012,6 +1082,8 @@ async function loadDebate(debateId, resume = false) {
             setDebatingState(false);
             updateBottombar('已完成');
             // 报告已在上面处理
+            // 加载的是已完成辩论时，也显示结束操作区（查看报告/继续讨论）
+            if (debate.final_summary) els.debateActions?.classList.remove('hidden');
         } else if (debate.status === 'terminated') {
             setDebatingState(false);
             updateBottombar('辩论已终止');

@@ -1162,6 +1162,93 @@ body {
 
 .btn-send:hover { opacity: 0.85; }
 
+/* 辩论结束后的操作区（查看报告 / 继续讨论） */
+.debate-actions {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+.btn-action {
+    background: var(--bg-input);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+.btn-action:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border-color: var(--accent);
+}
+
+/* 继续讨论的输入区 */
+.debate-continue {
+    flex: 1 1 100%;
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    animation: msgIn 0.2s ease;
+}
+
+.debate-continue textarea {
+    flex: 1;
+    background: var(--bg-input);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: inherit;
+    resize: none;
+    line-height: 1.5;
+    transition: var(--transition);
+}
+
+.debate-continue textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+/* 侧边栏导出下拉：向上弹出（sidebar-footer 在底部） */
+.sidebar-footer .export-menu {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    margin-bottom: 4px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-lg);
+    min-width: 220px;
+    z-index: 20;
+    overflow: hidden;
+}
+
+.sidebar-footer .export-dropdown {
+    position: relative;
+    flex: 1;
+}
+
+/* 导出按钮禁用状态 */
+.tool-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.tool-btn:disabled:hover {
+    background: transparent;
+    color: var(--text-muted);
+}
+
 /* ==================== 弹窗 ==================== */
 .modal-overlay {
     position: fixed;

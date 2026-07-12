@@ -11,6 +11,13 @@ logger = logging.getLogger(__name__)
 class LLMService:
     """统一的LLM调用服务，支持OpenAI兼容API"""
 
+    # 已知的占位符/无效密钥（大小写不敏感），这些不应被视为"已配置"
+    PLACEHOLDER_KEYS = {
+        "dummy-key", "sk-your-api-key-here", "your-api-key",
+        "sk-xxx", "xxx", "your_key", "your-api-key-here",
+        "placeholder", "test", "none", "null",
+    }
+
     def __init__(self):
         self._api_key: str = config.OPENAI_API_KEY
         self._api_base: str = config.OPENAI_API_BASE
@@ -27,7 +34,16 @@ class LLMService:
         return self._client
 
     def is_configured(self) -> bool:
-        return bool(self._api_key and self._api_key != "dummy-key")
+        """检查API Key是否真实配置（排除空值、占位符、过短的假密钥）"""
+        if not self._api_key:
+            return False
+        key = self._api_key.strip()
+        # 排除占位符、纯空格、长度过短（真实密钥通常 > 20 字符）
+        if key.lower() in self.PLACEHOLDER_KEYS:
+            return False
+        if len(key) < 20:
+            return False
+        return True
 
     def get_model(self) -> str:
         return self._model

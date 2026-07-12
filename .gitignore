@@ -21,6 +21,7 @@ env/
 .trae/
 .juno_task/
 .uploads/
+.zcode/
 *.swp
 *.swo
 *~
