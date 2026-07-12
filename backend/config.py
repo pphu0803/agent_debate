@@ -11,6 +11,11 @@ class Config:
     OPENAI_API_BASE: str = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
     LLM_MODEL: str = os.getenv("LLM_MODEL", "gpt-4o")
 
+    # ===== 访问鉴权 =====
+    # 设置访问密码后，所有API请求（除白名单外）需要携带有效token
+    # 留空 = 不启用鉴权（本地开发模式）
+    ACCESS_PASSWORD: str = os.getenv("ACCESS_PASSWORD", "")
+
     # ===== MongoDB 配置 =====
     MONGODB_URL: str = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
     MONGODB_DB: str = os.getenv("MONGODB_DB", "thought_incubator")

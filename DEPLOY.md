@@ -57,6 +57,17 @@ bash init-ssl.sh your-email@example.com
 
 打开 `https://debate.healthcompanion.com.cn` → 点左下角「设置」→ 填入 API Key → 保存
 
+### 4. 设置访问密码（重要！防止他人查看你的辩论记录）
+
+部署前，在服务器上创建 `.env` 文件设置访问密码：
+
+```bash
+# 在项目根目录创建 .env（docker-compose会自动读取）
+echo 'ACCESS_PASSWORD=你的强密码' >> .env
+```
+
+设置后，任何人访问网站都需要先输入密码登录。不设置则无鉴权（仅适合本地开发）。
+
 ### 完成！
 
 ---

@@ -5,7 +5,7 @@ from pathlib import Path
 from datetime import datetime
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import Response, JSONResponse
@@ -18,6 +18,7 @@ from debate_service import debate_service
 from llm_service import llm_service
 from web_search import web_search
 from agents import AGENTS, AGENT_ORDER, AGENT_NAMES, AGENT_COLORS, AGENT_ICONS
+from auth import require_auth, create_token, LoginRequest
 
 logging.basicConfig(
     level=logging.INFO,
@@ -56,8 +57,25 @@ async def shutdown_cleanup():
 
 # ==================== API路由 ====================
 
+@app.post("/api/auth/login")
+async def login(request: LoginRequest):
+    """登录：验证密码，返回token"""
+    if not config.ACCESS_PASSWORD:
+        # 未设密码，返回免鉴权标记
+        return {"token": "", "auth_required": False}
+    if request.password != config.ACCESS_PASSWORD:
+        raise HTTPException(status_code=401, detail="密码错误")
+    return {"token": create_token(), "auth_required": True}
+
+
+@app.get("/api/auth/status")
+async def auth_status():
+    """检查是否需要鉴权（前端启动时调用，决定是否弹登录框）"""
+    return {"auth_required": bool(config.ACCESS_PASSWORD)}
+
+
 @app.post("/api/debates")
-async def create_debate(request: CreateDebateRequest):
+async def create_debate(request: CreateDebateRequest, _: None = Depends(require_auth)):
     """创建新辩论"""
     if not llm_service.is_configured():
         raise HTTPException(status_code=400, detail="LLM API Key未配置，请先在设置中填写")
@@ -66,7 +84,7 @@ async def create_debate(request: CreateDebateRequest):
 
 
 @app.get("/api/debates/{debate_id}/stream")
-async def stream_debate(debate_id: str):
+async def stream_debate(debate_id: str, _: None = Depends(require_auth)):
     """SSE流式获取辩论实时更新
 
     辩论逻辑在后台asyncio任务中运行，此端点只负责推送事件。
@@ -88,7 +106,7 @@ async def stream_debate(debate_id: str):
 
 
 @app.get("/api/debates/{debate_id}")
-async def get_debate(debate_id: str):
+async def get_debate(debate_id: str, _: None = Depends(require_auth)):
     """获取辩论详情"""
     debate = await debate_service.get_debate(debate_id)
     if not debate:
@@ -97,13 +115,13 @@ async def get_debate(debate_id: str):
 
 
 @app.get("/api/debates")
-async def list_debates():
+async def list_debates(_: None = Depends(require_auth)):
     """获取辩论列表"""
     return await debate_service.list_debates()
 
 
 @app.post("/api/debates/{debate_id}/stop")
-async def stop_debate(debate_id: str):
+async def stop_debate(debate_id: str, _: None = Depends(require_auth)):
     """终止辩论"""
     success = await debate_service.stop_debate(debate_id)
     if not success:
@@ -112,7 +130,7 @@ async def stop_debate(debate_id: str):
 
 
 @app.post("/api/debates/{debate_id}/pause")
-async def pause_debate(debate_id: str):
+async def pause_debate(debate_id: str, _: None = Depends(require_auth)):
     """暂停辩论（可恢复）"""
     success = await debate_service.pause_debate(debate_id)
     if not success:
@@ -121,7 +139,7 @@ async def pause_debate(debate_id: str):
 
 
 @app.post("/api/debates/{debate_id}/resume")
-async def resume_debate(debate_id: str):
+async def resume_debate(debate_id: str, _: None = Depends(require_auth)):
     """恢复暂停的辩论"""
     success = await debate_service.resume_debate(debate_id)
     if not success:
@@ -130,7 +148,7 @@ async def resume_debate(debate_id: str):
 
 
 @app.post("/api/debates/{debate_id}/inject")
-async def inject_message(debate_id: str, request: InjectMessageRequest):
+async def inject_message(debate_id: str, request: InjectMessageRequest, _: None = Depends(require_auth)):
     """注入用户消息到辩论"""
     result = await debate_service.inject_message(debate_id, request.content)
     if not result:
@@ -139,7 +157,7 @@ async def inject_message(debate_id: str, request: InjectMessageRequest):
 
 
 @app.get("/api/debates/{debate_id}/export")
-async def export_debate(debate_id: str, format: str = Query(default="md", description="导出格式: json|md|summary|report")):
+async def export_debate(debate_id: str, format: str = Query(default="md", description="导出格式: json|md|summary|report"), _: None = Depends(require_auth)):
     """多格式导出辩论
 
     format:
@@ -183,7 +201,7 @@ async def get_config():
 
 
 @app.post("/api/config")
-async def update_config(request: UpdateConfigRequest):
+async def update_config(request: UpdateConfigRequest, _: None = Depends(require_auth)):
     """更新LLM配置"""
     llm_service.update_config(
         api_key=request.api_key,

@@ -217,6 +217,24 @@
         </div>
     </div>
 
+    <!-- ===== 登录弹窗 ===== -->
+    <div class="modal-overlay hidden" id="loginModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>🔐 访问验证</h2>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>访问密码</label>
+                    <input type="password" id="loginPasswordInput" placeholder="请输入访问密码">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" id="btnLogin">进入</button>
+            </div>
+        </div>
+    </div>
+
     <div class="toast-container" id="toastContainer"></div>
 
     <script src="js/app.js"></script>

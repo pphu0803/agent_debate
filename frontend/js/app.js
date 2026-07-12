@@ -59,6 +59,9 @@ const els = {
     debateContinue: $('debateContinue'),
     continueInput: $('continueInput'),
     btnContinueSend: $('btnContinueSend'),
+    loginModal: $('loginModal'),
+    loginPasswordInput: $('loginPasswordInput'),
+    btnLogin: $('btnLogin'),
 };
 
 const AGENTS = {
@@ -72,11 +75,86 @@ const AGENTS = {
 // 例如: const API_BASE = 'https://your-backend.example.com';
 const API_BASE = window.location.origin;
 
+// ===== 访问鉴权 =====
+const TOKEN_KEY = 'debate_access_token';
+
+function getToken() { return localStorage.getItem(TOKEN_KEY) || ''; }
+function setToken(t) {
+    if (t) localStorage.setItem(TOKEN_KEY, t);
+    else localStorage.removeItem(TOKEN_KEY);
+}
+
+// 统一的API请求封装：自动带token，401时弹登录框
+async function apiFetch(url, options = {}) {
+    const token = getToken();
+    const headers = { ...(options.headers || {}) };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(url, { ...options, headers });
+    // 401 = token失效，清除并弹登录框
+    if (res.status === 401) {
+        setToken('');
+        showLoginModal();
+        throw new Error('未授权，请重新登录');
+    }
+    return res;
+}
+
+// 检查鉴权状态：若后端要求鉴权且本地无token，弹登录框
+async function checkAuth() {
+    try {
+        const res = await fetch(`${API_BASE}/api/auth/status`);
+        const data = await res.json();
+        if (data.auth_required && !getToken()) {
+            showLoginModal();
+            return false;
+        }
+        return true;
+    } catch {
+        return true; // 检测失败时放行，避免完全卡死
+    }
+}
+
+function showLoginModal() {
+    els.loginModal.classList.remove('hidden');
+    els.loginPasswordInput?.focus();
+}
+
+function hideLoginModal() {
+    els.loginModal.classList.add('hidden');
+    if (els.loginPasswordInput) els.loginPasswordInput.value = '';
+}
+
+async function doLogin() {
+    const password = els.loginPasswordInput.value.trim();
+    if (!password) { showToast('请输入密码', 'error'); return; }
+    try {
+        const res = await fetch(`${API_BASE}/api/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password }),
+        });
+        if (!res.ok) {
+            showToast('密码错误', 'error');
+            els.loginPasswordInput?.focus();
+            return;
+        }
+        const data = await res.json();
+        setToken(data.token);
+        hideLoginModal();
+        await loadConfig();  // 登录后重新加载配置
+        showToast('登录成功', 'success');
+    } catch (e) {
+        showToast('登录失败: ' + e.message, 'error');
+    }
+}
+
 // ===== 初始化 =====
 async function init() {
     marked.setOptions({ breaks: true, gfm: true });
-    await loadConfig();
     bindEvents();
+    // 先检查鉴权：若需要登录且无token，弹登录框（不加载主界面）
+    const authed = await checkAuth();
+    if (authed) await loadConfig();
 }
 
 // ===== 加载配置 =====
@@ -180,6 +258,12 @@ function bindEvents() {
     els.continueInput.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') startContinuedDebate();
     });
+
+    // 登录
+    els.btnLogin.addEventListener('click', doLogin);
+    els.loginPasswordInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') doLogin();
+    });
 }
 
 // ===== 开始辩论 =====
@@ -206,7 +290,7 @@ async function startDebate() {
     const scoreThreshold = parseInt(els.scoreThreshold.value) || 6;
 
     try {
-        const res = await fetch(`${API_BASE}/api/debates`, {
+        const res = await apiFetch(`${API_BASE}/api/debates`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ topic, max_rounds: maxRounds, score_threshold: scoreThreshold }),
@@ -260,7 +344,10 @@ async function startContinuedDebate() {
 }
 function connectSSE(debateId) {
     if (state.eventSource) state.eventSource.close();
-    state.eventSource = new EventSource(`${API_BASE}/api/debates/${debateId}/stream`);
+    // SSE(EventSource)无法设header，token通过query param传递
+    const token = getToken();
+    const tokenQs = token ? `?token=${encodeURIComponent(token)}` : '';
+    state.eventSource = new EventSource(`${API_BASE}/api/debates/${debateId}/stream${tokenQs}`);
 
     state.eventSource.onmessage = (event) => {
         try {
@@ -744,7 +831,7 @@ function exportDebate(format) {
     }
 
     const url = `${API_BASE}/api/debates/${state.debateId}/export?format=${format}`;
-    fetch(url).then(res => {
+    apiFetch(url).then(res => {
         if (!res.ok) throw new Error('导出失败');
         return res.blob();
     }).then(blob => {
@@ -795,7 +882,7 @@ function closeReport() { els.reportModal.classList.add('hidden'); }
 async function stopDebate() {
     if (!state.debateId) return;
     try {
-        await fetch(`${API_BASE}/api/debates/${state.debateId}/stop`, { method: 'POST' });
+        await apiFetch(`${API_BASE}/api/debates/${state.debateId}/stop`, { method: 'POST' });
         if (state.eventSource) state.eventSource.close();
         state.eventSource = null;
         state.isPaused = false;
@@ -841,7 +928,7 @@ async function togglePause() {
     if (!state.debateId) return;
     const endpoint = state.isPaused ? 'resume' : 'pause';
     try {
-        const res = await fetch(`${API_BASE}/api/debates/${state.debateId}/${endpoint}`, { method: 'POST' });
+        const res = await apiFetch(`${API_BASE}/api/debates/${state.debateId}/${endpoint}`, { method: 'POST' });
         if (!res.ok) {
             const err = await res.json();
             showToast(err.detail || '操作失败', 'error');
@@ -855,7 +942,7 @@ async function sendUserMessage() {
     if (!state.debateId) return;
 
     try {
-        const res = await fetch(`${API_BASE}/api/debates/${state.debateId}/inject`, {
+        const res = await apiFetch(`${API_BASE}/api/debates/${state.debateId}/inject`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ content }),
@@ -920,7 +1007,7 @@ async function saveSettings() {
     if (els.apiBaseInput.value.trim()) body.api_base = els.apiBaseInput.value.trim();
     if (els.modelInput.value.trim()) body.model = els.modelInput.value.trim();
     try {
-        const res = await fetch(`${API_BASE}/api/config`, {
+        const res = await apiFetch(`${API_BASE}/api/config`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),
@@ -940,7 +1027,7 @@ async function openHistory() {
     els.historyModal.classList.remove('hidden');
     els.historyList.innerHTML = '<p class="loading-text">加载中...</p>';
     try {
-        const res = await fetch(`${API_BASE}/api/debates`);
+        const res = await apiFetch(`${API_BASE}/api/debates`);
         let debates = await res.json();
 
         // 按筛选过滤
@@ -1009,7 +1096,7 @@ async function loadDebate(debateId, resume = false) {
     state.currentReport = null;
 
     try {
-        const res = await fetch(`${API_BASE}/api/debates/${debateId}`);
+        const res = await apiFetch(`${API_BASE}/api/debates/${debateId}`);
         const debate = await res.json();
 
         state.debateId = debateId;

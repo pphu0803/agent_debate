@@ -30,6 +30,9 @@ services:
       - LLM_MODEL=${LLM_MODEL:-gpt-4o}
       - MAX_ROUNDS=${MAX_ROUNDS:-20}
       - SCORE_THRESHOLD=${SCORE_THRESHOLD:-6}
+      # 访问鉴权密码（留空=不启用鉴权，设置后所有API需登录）
+      # 请改成你自己的强密码！
+      - ACCESS_PASSWORD=${ACCESS_PASSWORD:-}
     depends_on:
       - mongodb
     restart: unless-stopped
