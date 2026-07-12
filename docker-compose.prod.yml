@@ -1,0 +1,60 @@
+# ============================================
+# 生产环境部署配置
+# 用法: docker compose -f docker-compose.prod.yml up -d
+# ============================================
+
+services:
+  # MongoDB数据库（不对外暴露端口，仅内部网络可达）
+  mongodb:
+    image: mongo:7
+    container_name: thought_incubator_mongo
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+    networks:
+      - thought_net
+
+  # 后端API + 前端静态文件
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: thought_incubator_backend
+    expose:
+      - "8000"   # 仅对同网络容器开放，不对宿主机暴露
+    environment:
+      - MONGODB_URL=mongodb://mongodb:27017
+      - MONGODB_DB=thought_incubator
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_API_BASE=${OPENAI_API_BASE:-https://api.openai.com/v1}
+      - LLM_MODEL=${LLM_MODEL:-gpt-4o}
+      - MAX_ROUNDS=${MAX_ROUNDS:-20}
+      - SCORE_THRESHOLD=${SCORE_THRESHOLD:-6}
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+    networks:
+      - thought_net
+
+  # Nginx反向代理：HTTPS终结 + 转发到后端
+  nginx:
+    image: nginx:alpine
+    container_name: thought_incubator_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - thought_net
+
+volumes:
+  mongodb_data:
+
+networks:
+  thought_net:
+    driver: bridge
