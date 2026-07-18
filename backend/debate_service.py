@@ -563,6 +563,31 @@ class DebateService:
                 ],
             })
 
+            # 辩论组织者进行议题分析
+            await self._save_event(debate_id, {
+                "type": "topic_analysis_start",
+            })
+            try:
+                from agents import MODERATOR_ROLE
+                moderator = AGENTS[MODERATOR_ROLE]
+                analysis = await moderator.analyze_topic(topic)
+                if analysis:
+                    # 存入辩论文档
+                    await self.db.debates.update_one(
+                        {"_id": ObjectId(debate_id)},
+                        {"$set": {"topic_analysis": analysis, "updated_at": datetime.now()}}
+                    )
+                    await self._save_event(debate_id, {
+                        "type": "topic_analysis",
+                        "content": analysis,
+                    })
+            except Exception as e:
+                logger.error(f"议题分析失败: {e}", exc_info=True)
+                await self._save_event(debate_id, {
+                    "type": "topic_analysis",
+                    "content": "议题分析失败，跳过。",
+                })
+
             # 主循环
             for round_num in range(1, max_rounds + 1):
                 if not self._active_debates.get(debate_id, False):

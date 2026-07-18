@@ -457,6 +457,45 @@ class ModeratorAgent(BaseAgent):
             logger.error(f"Moderator 发言失败: {e}")
             raise
 
+    async def analyze_topic(self, raw_topic: str) -> str:
+        """辩论开始前，解析和拆解用户输入的题目
+
+        返回Markdown格式的分析结果，包含：
+        - 议题拆解（核心问题 + 子问题）
+        - 主要讨论方向
+        - 关键概念界定
+        """
+        messages = [
+            {
+                "role": "system",
+                "content": """你是辩论组织者。现在用户提交了一个议题，你需要在讨论开始前对它进行解析和拆解。
+
+你的任务：
+1. **议题拆解**：用户输入可能是一段描述、一个现象、或者一组概念。请将其拆解为清晰的、可讨论的问题或辩题。如果用户输入包含多个问题，逐一列出。
+2. **核心矛盾**：识别这些议题中最核心的矛盾或张力是什么——正反两方各是什么立场？
+3. **讨论方向**：指出后续讨论应该关注的主要方向（2-3个），作为三个讨论者（理论创新者、审稿人、文献映射者）的指引。
+4. **概念界定**：如果议题中涉及模糊的关键概念，简要说明需要界定的点。
+
+格式要求：用Markdown输出，结构清晰，但不要过长。目标是让后续的讨论者快速理解"我们在讨论什么"。
+
+不需要评分，不需要状态标记。只输出分析内容。"""
+            },
+            {
+                "role": "user",
+                "content": f"用户提交的议题：\n\n{raw_topic}\n\n请对以上议题进行解析和拆解。"
+            }
+        ]
+        try:
+            response = await llm_service.chat(
+                messages=messages,
+                temperature=0.3,
+                max_tokens=1500
+            )
+            return response.strip()
+        except Exception as e:
+            logger.error(f"Moderator 议题分析失败: {e}")
+            return ""
+
 
 # Agent实例
 AGENTS: dict = {

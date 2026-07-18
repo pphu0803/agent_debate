@@ -955,6 +955,66 @@ body {
     color: var(--text-muted);
 }
 
+/* 议题分析卡片 */
+.topic-analysis-card {
+    --agent-color: #a78bfa;
+    background: var(--bg-elevated);
+    border: 1px solid rgba(167,139,250,0.2);
+    border-radius: var(--radius);
+    margin: 8px 0;
+    overflow: hidden;
+}
+
+.topic-analysis-card .msg-avatar {
+    background: rgba(167,139,250,0.1);
+}
+
+.topic-analysis-card .analysis-badge {
+    font-size: 11px;
+    color: #a78bfa;
+    background: rgba(167,139,250,0.1);
+    padding: 2px 10px;
+    border-radius: var(--radius-pill);
+    font-weight: 600;
+}
+
+.topic-analysis-card .topic-analysis-body {
+    background: transparent;
+    padding: 0;
+    border: none;
+}
+
+.topic-analysis-card .topic-analysis-body h1,
+.topic-analysis-card .topic-analysis-body h2 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 14px 0 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+}
+
+.topic-analysis-card .topic-analysis-body h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 12px 0 6px;
+    color: var(--text-secondary);
+}
+
+.topic-analysis-card .topic-analysis-body ul,
+.topic-analysis-card .topic-analysis-body ol {
+    padding-left: 22px;
+    margin: 6px 0;
+}
+
+.topic-analysis-card .topic-analysis-body li {
+    margin-bottom: 4px;
+}
+
+.topic-analysis-card .topic-analysis-body strong {
+    color: var(--text-primary);
+}
+
 /* 跳过发言卡片 */
 .chat-msg-skip {
     display: flex;

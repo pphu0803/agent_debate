@@ -477,6 +477,23 @@ function handleSSEEvent(data) {
             addSystemNotice(`🔬 ${data.message || '讨论已达到需要实验/实证验证的瓶颈'}`, 'deadend');
             break;
 
+        case 'topic_analysis_start':
+            addThinkingCard({
+                agent: 'moderator',
+                agent_name: '辩论组织者',
+                agent_icon: '🎭',
+                round: 0,
+                message: '正在分析议题...',
+            });
+            updateBottombar('组织者正在解析议题...');
+            break;
+
+        case 'topic_analysis':
+            removeThinkingCard();
+            addTopicAnalysisCard(data.content);
+            updateBottombar('辩论进行中');
+            break;
+
         case 'generating_report':
             removeThinkingCard();
             addSystemNotice('正在生成思想孵化报告...', 'info');
@@ -640,6 +657,24 @@ function addAgentMessage(data) {
         </div>
     `;
     container.appendChild(el);
+    scrollToBottom();
+}
+
+function addTopicAnalysisCard(content) {
+    const el = document.createElement('div');
+    el.className = 'chat-msg topic-analysis-card';
+    if (arguments[1] !== undefined) el.setAttribute('data-seq', arguments[1]);
+    el.innerHTML = `
+        <div class="msg-avatar">🎭</div>
+        <div class="msg-content-wrap">
+            <div class="msg-header">
+                <span class="msg-name" style="color: var(--text-secondary);">辩论组织者</span>
+                <span class="analysis-badge">议题分析</span>
+            </div>
+            <div class="msg-body topic-analysis-body">${marked.parse(content || '')}</div>
+        </div>
+    `;
+    getMessagesInner().appendChild(el);
     scrollToBottom();
 }
 
@@ -1113,6 +1148,11 @@ async function loadDebate(debateId, resume = false) {
 
         // 渲染历史消息
         addUserMessage(debate.topic);
+
+        // 渲染议题分析（如果有）
+        if (debate.topic_analysis) {
+            addTopicAnalysisCard(debate.topic_analysis);
+        }
 
         let lastRound = 0;
         for (const msg of debate.messages || []) {
