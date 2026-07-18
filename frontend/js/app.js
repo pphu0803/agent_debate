@@ -65,10 +65,10 @@ const els = {
 };
 
 const AGENTS = {
-    innovator: { name: '创新者', icon: '💡', color: '#ff6b6b' },
-    critic:    { name: '批判者', icon: '⚔️', color: '#4ecdc4' },
-    scholar:   { name: '严谨者', icon: '🔍', color: '#95e1d3' },
-    moderator: { name: '组织者', icon: '🎭', color: '#a78bfa' },
+    innovator: { name: '创新者', icon: '💡', color: '#E8705A' },
+    critic:    { name: '批判者', icon: '⚔️', color: '#6B8FA8' },
+    scholar:   { name: '严谨者', icon: '🔍', color: '#A8B574' },
+    moderator: { name: '组织者', icon: '🎭', color: '#9B7FB8' },
 };
 
 // 后端API地址：同源时自动检测，部署到Cloudflare Pages时需改为后端实际地址
@@ -895,13 +895,13 @@ async function exportAsPDF() {
     w.document.write(`
         <html><head><title>思想孵化报告</title>
         <style>
-            body { font-family: -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; padding: 40px; line-height: 1.8; color: #1a1a2e; max-width: 800px; margin: 0 auto; }
-            h2 { border-bottom: 2px solid #ddd; padding-bottom: 6px; color: #333; }
-            h3 { color: #555; }
-            blockquote { border-left: 3px solid #10a37f; padding-left: 14px; color: #666; }
+            body { font-family: -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; padding: 40px; line-height: 1.8; color: #2A2420; max-width: 800px; margin: 0 auto; }
+            h2 { border-bottom: 2px solid #D4A574; padding-bottom: 6px; color: #1A1410; }
+            h3 { color: #6B5E55; }
+            blockquote { border-left: 3px solid #D4A574; padding-left: 14px; color: #6B5E55; }
             table { border-collapse: collapse; width: 100%; }
-            th, td { border: 1px solid #ddd; padding: 8px 12px; }
-            th { background: #f5f5f5; }
+            th, td { border: 1px solid #D4A574; padding: 8px 12px; }
+            th { background: #F5F0E8; }
             code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
         </style>
         </head><body>${html}</body></html>

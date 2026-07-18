@@ -1,35 +1,38 @@
 /* ============================================
-   思想孵化机 - ChatGPT风格样式表
+   思想孵化机 - 羊皮纸暖光主题
+   深暖棕背景 + 暖金强调，学术讨论室质感
    ============================================ */
 
 :root {
-    --bg-app: #212121;
-    --bg-sidebar: #171717;
-    --bg-main: #212121;
-    --bg-input: #2f2f2f;
-    --bg-hover: #2f2f2f;
-    --bg-avatar: #2f2f2f;
-    --bg-elevated: #2f2f2f;
-    --bg-msg-hover: #292929;
-    --bg-modal: #2f2f2f;
+    --bg-app: #2A2420;
+    --bg-sidebar: #231E1A;
+    --bg-main: #2A2420;
+    --bg-input: #332D28;
+    --bg-hover: #3D3630;
+    --bg-avatar: #332D28;
+    --bg-elevated: #332D28;
+    --bg-msg-hover: #2F2925;
+    --bg-modal: #332D28;
 
-    --text-primary: #ececec;
-    --text-secondary: #b4b4b4;
-    --text-muted: #8e8e8e;
-    --text-dim: #6e6e6e;
+    --text-primary: #F5F0E8;
+    --text-secondary: #A89E90;
+    --text-muted: #8A7D74;
+    --text-dim: #6B5E55;
+    --text-on-accent: #1A1410;
 
-    --accent: #10a37f;
-    --accent-hover: #0d8a6a;
-    --danger: #ef4146;
-    --warning: #f5a623;
-    --success: #10a37f;
+    --accent: #D4A574;
+    --accent-hover: #C49564;
+    --danger: #F7768E;
+    --warning: #E0AF68;
+    --success: #9ECE6A;
 
-    --innovator: #ff6b6b;
-    --critic: #4ecdc4;
-    --scholar: #95e1d3;
+    --innovator: #E8705A;
+    --critic: #6B8FA8;
+    --scholar: #A8B574;
+    --moderator: #9B7FB8;
 
-    --border: rgba(255,255,255,0.08);
-    --border-strong: rgba(255,255,255,0.14);
+    --border: rgba(245,240,232,0.08);
+    --border-strong: rgba(245,240,232,0.14);
 
     --radius: 12px;
     --radius-sm: 8px;
@@ -177,7 +180,7 @@ body {
 /* 按钮 */
 .btn-primary {
     background: var(--accent);
-    color: #fff;
+    color: var(--text-on-accent);
     border: none;
     border-radius: var(--radius-sm);
     padding: 10px 16px;
@@ -243,7 +246,7 @@ body {
     margin-top: 8px;
     background: transparent;
     color: var(--danger);
-    border: 1px solid rgba(239,65,70,0.3);
+    border: 1px solid rgba(247,118,142,0.3);
     border-radius: var(--radius-sm);
     padding: 8px 16px;
     font-size: 13px;
@@ -253,7 +256,7 @@ body {
 }
 
 .btn-stop:hover {
-    background: rgba(239,65,70,0.1);
+    background: rgba(247,118,142,0.1);
     border-color: var(--danger);
 }
 
@@ -263,7 +266,7 @@ body {
     margin-top: 8px;
     background: transparent;
     color: var(--warning);
-    border: 1px solid rgba(245,166,35,0.3);
+    border: 1px solid rgba(224,175,104,0.3);
     border-radius: var(--radius-sm);
     padding: 8px 16px;
     font-size: 13px;
@@ -273,7 +276,7 @@ body {
 }
 
 .btn-pause:hover {
-    background: rgba(245,166,35,0.1);
+    background: rgba(224,175,104,0.1);
     border-color: var(--warning);
 }
 
@@ -674,7 +677,7 @@ body {
 
 .chat-msg-user .msg-avatar {
     background: var(--accent);
-    color: #fff;
+    color: var(--text-on-accent);
     font-size: 11px;
     font-weight: 700;
 }
@@ -771,9 +774,9 @@ body {
     margin-left: auto;
 }
 
-.msg-score.high { color: var(--success); background: rgba(16,163,127,0.1); }
-.msg-score.mid { color: var(--warning); background: rgba(245,166,35,0.1); }
-.msg-score.low { color: var(--danger); background: rgba(239,65,70,0.1); }
+.msg-score.high { color: var(--success); background: rgba(212,165,116,0.1); }
+.msg-score.mid { color: var(--warning); background: rgba(224,175,104,0.1); }
+.msg-score.low { color: var(--danger); background: rgba(247,118,142,0.1); }
 
 .msg-body {
     font-size: 13px;
@@ -938,14 +941,14 @@ body {
 }
 
 .system-notice.redirect {
-    background: rgba(245,166,35,0.08);
-    border: 1px solid rgba(245,166,35,0.2);
+    background: rgba(224,175,104,0.08);
+    border: 1px solid rgba(224,175,104,0.2);
     color: var(--warning);
 }
 
 .system-notice.deadend {
-    background: rgba(239,65,70,0.06);
-    border: 1px solid rgba(239,65,70,0.15);
+    background: rgba(247,118,142,0.06);
+    border: 1px solid rgba(247,118,142,0.15);
     color: var(--danger);
 }
 
@@ -957,22 +960,22 @@ body {
 
 /* 议题分析卡片 */
 .topic-analysis-card {
-    --agent-color: #a78bfa;
+    --agent-color: #9B7FB8;
     background: var(--bg-elevated);
-    border: 1px solid rgba(167,139,250,0.2);
+    border: 1px solid rgba(155,127,184,0.2);
     border-radius: var(--radius);
     margin: 8px 0;
     overflow: hidden;
 }
 
 .topic-analysis-card .msg-avatar {
-    background: rgba(167,139,250,0.1);
+    background: rgba(155,127,184,0.1);
 }
 
 .topic-analysis-card .analysis-badge {
     font-size: 11px;
-    color: #a78bfa;
-    background: rgba(167,139,250,0.1);
+    color: #9B7FB8;
+    background: rgba(155,127,184,0.1);
     padding: 2px 10px;
     border-radius: var(--radius-pill);
     font-weight: 600;
@@ -1070,9 +1073,9 @@ body {
     margin-left: auto;
 }
 
-.chat-msg-skip .msg-score.high { background: rgba(16,163,127,0.1); color: var(--success); }
-.chat-msg-skip .msg-score.mid { background: rgba(245,166,35,0.1); color: var(--warning); }
-.chat-msg-skip .msg-score.low { background: rgba(239,65,70,0.1); color: var(--danger); }
+.chat-msg-skip .msg-score.high { background: rgba(212,165,116,0.1); color: var(--success); }
+.chat-msg-skip .msg-score.mid { background: rgba(224,175,104,0.1); color: var(--warning); }
+.chat-msg-skip .msg-score.low { background: rgba(247,118,142,0.1); color: var(--danger); }
 
 .skip-badge {
     font-size: 10px;
@@ -1103,7 +1106,7 @@ body {
 
 .chat-msg-user-inject .user-inject-avatar {
     background: var(--warning);
-    color: #fff;
+    color: var(--text-on-accent);
     font-size: 11px;
     font-weight: 700;
 }
@@ -1113,8 +1116,8 @@ body {
 }
 
 .chat-msg-user-inject .msg-body {
-    background: rgba(245,166,35,0.06);
-    border: 1px solid rgba(245,166,35,0.15);
+    background: rgba(224,175,104,0.06);
+    border: 1px solid rgba(224,175,104,0.15);
     border-radius: var(--radius-sm);
     padding: 8px 12px;
 }
@@ -1129,19 +1132,19 @@ body {
 .chat-msg-user-inject .msg-tag {
     font-size: 10px;
     color: var(--warning);
-    background: rgba(245,166,35,0.1);
+    background: rgba(224,175,104,0.1);
     padding: 1px 6px;
     border-radius: var(--radius-pill);
 }
 
 .system-notice.info {
-    background: rgba(16,163,127,0.06);
+    background: rgba(212,165,116,0.06);
     color: var(--success);
-    border: 1px solid rgba(16,163,127,0.15);
+    border: 1px solid rgba(212,165,116,0.15);
 }
 
 .system-notice.compress {
-    background: rgba(142,142,142,0.06);
+    background: rgba(138,125,116,0.06);
     color: var(--text-muted);
     border: 1px dashed var(--border-strong);
 }
@@ -1171,8 +1174,8 @@ body {
 }
 
 @keyframes pulseDot {
-    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(16,163,127,0.4); }
-    50% { opacity: 0.5; box-shadow: 0 0 0 6px rgba(16,163,127,0); }
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(212,165,116,0.4); }
+    50% { opacity: 0.5; box-shadow: 0 0 0 6px rgba(212,165,116,0); }
 }
 
 /* 底部用户输入区（暂停时显示） */
@@ -1208,7 +1211,7 @@ body {
 
 .btn-send {
     background: var(--warning);
-    color: #fff;
+    color: var(--text-on-accent);
     border: none;
     border-radius: var(--radius-sm);
     padding: 10px 16px;
@@ -1438,12 +1441,12 @@ body {
 }
 
 .config-status.ok {
-    background: rgba(16,163,127,0.08);
+    background: rgba(212,165,116,0.08);
     color: var(--success);
 }
 
 .config-status.error {
-    background: rgba(239,65,70,0.08);
+    background: rgba(247,118,142,0.08);
     color: var(--danger);
 }
 
@@ -1514,7 +1517,7 @@ body {
 
 .history-tab.active {
     background: var(--accent);
-    color: #fff;
+    color: var(--text-on-accent);
     border-color: var(--accent);
 }
 
@@ -1540,7 +1543,7 @@ body {
 
 .btn-resume {
     background: var(--accent);
-    color: #fff;
+    color: var(--text-on-accent);
     border: none;
     border-radius: var(--radius-sm);
     padding: 6px 14px;
